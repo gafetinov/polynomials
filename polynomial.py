@@ -8,6 +8,5 @@ class Polynomial():
             if unrepresented_pol[i] is '^':
                 pass
 
-
     def get_strng(self):
         return self.string
