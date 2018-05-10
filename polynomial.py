@@ -3,22 +3,34 @@ class Polynomial():
         self.string = string
 
     def sort_by_monomial(self, input):
-        exponents = [0]
+        exponents = []
         variables = []
-        for symbol in input:
-            if symbol.isdigit():
-                exponents.append(str(symbol))
-            elif symbol.isalpha():
-                variables.append(str(symbol))
-        return exponents, variables, -len(variables)
+        i = 0
+        if input.isdigit():
+            exponents.append(0)
+        while i < len(input):
+            if input[i].isdigit():
+                exponent = ''
+                while i < len(input) and input[i].isdigit():
+                    exponent += input[i]
+                    i += 1
+                exponents.append(int(exponent))
+            elif input[i].isalpha():
+                variables.append(str(input[i]))
+                i += 1
+                if i+1 < len(input) and input[i+1] != '^':
+                    exponents.append(1)
+            else:
+                i += 1
+        return exponents, variables
+
+    def sort_by_variables(self, string):
+        if len(string) == 1:
+            return string[0]
+        else:
+            return string[2:] and string[0]
 
     def simplify(self):
-
-        def sort_by_variables(string):
-            if len(string) == 1:
-                return string[0]
-            else:
-                return string[2:] and string[0]
 
         def multiply(numbers):
             multiple = 1
@@ -65,11 +77,14 @@ class Polynomial():
                         variables.append(variable)
                         i = j
                 i += 1
-            variables.sort(key=sort_by_variables)
+            variables.sort(key=self.sort_by_variables)
             common_multiplier = multiply(multipliers)
             simple_monomials.append(str(common_multiplier)+''.join(variables))
             monomial_index += 1
-        simple_monomials.sort(key=self.sort_by_monomial)
+        simple_monomials.sort(key=self.sort_by_monomial, reverse=True)
+
+    def simplify_monomial(self, monomial):
+        pass
 
     def get_str(self):
         return self.string

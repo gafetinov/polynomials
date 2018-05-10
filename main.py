@@ -9,7 +9,11 @@ def main():
                         help='Enter two polynomials to compare them')
     arguments = parser.parse_args()
     polynomials = []
-    for i in range(len(arguments)):
-        polynomials[i] = Polynomial(arguments[i])
-        polynomials[i].simplify()
+    for string in arguments.string:
+        polynomials.append(Polynomial(string))
+        polynomials[-1].simplify()
     print(polynomials[0].get_str() == polynomials[1].get_str())
+
+
+if __name__ == '__main__':
+    main()
