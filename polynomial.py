@@ -53,7 +53,7 @@ class Polynomial():
         monomial_index = 0
         for monomial in monomials:
             variables = []
-            multipliers = []
+            multipliers = [1]
             i = 0
             while i < len(monomial):
                 if monomial[i].isdigit():
