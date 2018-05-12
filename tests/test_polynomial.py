@@ -65,10 +65,10 @@ class TestPolynomial():
         assert pol7.string == '2'
         pol8 = Polynomial('3a-2a+2b-b-a')
         pol8.simplify()
-        assert pol8.string == 'b'
+        assert pol8.string == 'b+0'
         pol9 = Polynomial('3a-2b-4a+2b')
         pol9.simplify()
-        assert pol9.string == '2a'
+        assert pol9.string == '-a+0'
 
     def test_get_monomial(self):
         pol = Polynomial('3k+4h+8k+4')
