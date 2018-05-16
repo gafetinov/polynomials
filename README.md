@@ -14,7 +14,7 @@
 
 ## Состав
 * Консольная версия: `main.py`
-* Тесты: test_validator.py
+* Тесты: test_polinomial.py
 * Класс для работы с многочленами: polinomial.py
 
 ## Консольная версия
