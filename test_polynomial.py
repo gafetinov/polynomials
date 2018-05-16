@@ -6,7 +6,7 @@ A = Polynomial('example')
 
 class TestPolynomial():
     def test_sort_by_monomial(self):
-        a = ['y', 'x^3']
+        a = ['y', 'x^3'] #asd
         b = Polynomial('example')
         c = ['x^23', '12', 'x^3y^3abc']
         d = ['12', '12A^1212b', 'abcdg', '21', 'bbcdg']
