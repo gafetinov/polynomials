@@ -58,7 +58,7 @@ class Polynomial():
         i = 0
         if input.isdigit():
             exponents.append(0)
-        input = input.lstrip('123456789+-')
+        input = input.lstrip('123456789+-.')
         while i < len(input):
             if input[i].isdigit():
                 exponent = ''
@@ -123,9 +123,9 @@ class Polynomial():
         simple_pols = []
         while i < len(pol):
             if i < len(pol)-1 and \
-                    pol[i].lstrip('1234567890+-') ==\
-                    pol[i+1].lstrip('1234567890+-'):
-                multiplier = re.match(r'-?\d*', pol[i]).group(0)
+                    pol[i].lstrip('1234567890+-.') ==\
+                    pol[i+1].lstrip('1234567890+-.'):
+                multiplier = re.match(r'-?\d*.\d*', pol[i]).group(0)
                 if multiplier is None or multiplier == '':
                     multiplier = 1
                 elif multiplier == '-':
@@ -133,9 +133,9 @@ class Polynomial():
                 else:
                     multiplier = float(multiplier)
                 while i < len(pol)-1 and \
-                        pol[i].lstrip('1234567890+-') ==\
-                        pol[i+1].lstrip('1234567890+-'):
-                    k2 = re.match(r'-?\d*', pol[i+1]).group(0)
+                        pol[i].lstrip('1234567890+-.') ==\
+                        pol[i+1].lstrip('1234567890+-.'):
+                    k2 = re.match(r'-?\d*.\d*', pol[i+1]).group(0)
                     if k2 is None or k2 == '':
                         k2 = 1
                     elif k2 == '-':
@@ -147,12 +147,12 @@ class Polynomial():
                 if multiplier == 0:
                     simple_pol = '0'
                 elif multiplier == 1:
-                    simple_pol = pol[i].lstrip('1234567890+-')
+                    simple_pol = pol[i].lstrip('1234567890+-.')
                 elif multiplier == -1:
-                    simple_pol = '-'+pol[i].lstrip('1234567890+-')
+                    simple_pol = '-'+pol[i].lstrip('1234567890+-.')
                 else:
                     simple_pol = str(multiplier) + pol[i].lstrip(
-                        '1234567890+-')
+                        '1234567890+-.')
             else:
                 simple_pol = pol[i]
             simple_pols.append(simple_pol)
