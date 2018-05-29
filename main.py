@@ -6,7 +6,7 @@ def main():
     parser = argparse.ArgumentParser(
         description='This program compares two polynomials')
     parser.add_argument('string', nargs=2,
-                        help='Enter two polynomials to compare them')
+                        help='Enter polynomials to compare them')
     arguments = parser.parse_args()
     polynomials = []
     for string in arguments.string:
