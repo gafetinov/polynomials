@@ -5,16 +5,14 @@ from polynomial import Polynomial
 def main():
     parser = argparse.ArgumentParser(
         description='This program compares two polynomials')
-    parser.add_argument('--simple', nargs='*',
+    parser.add_argument('string', nargs=2,
                         help='Enter two polynomials to compare them')
     arguments = parser.parse_args()
     polynomials = []
-    for string in arguments.simple:
+    for string in arguments.string:
         polynomials.append(Polynomial(string))
         polynomials[-1].simplify()
-    if arguments.simple:
-        for polynomial in polynomials:
-            print(polynomial.string)
+    print(polynomials[0].string == polynomials[1].string)
 
 
 if __name__ == '__main__':
