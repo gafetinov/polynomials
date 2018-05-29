@@ -6,7 +6,41 @@ class Polynomial():
         self.string = string
         self.errors = self.check_for_errors()
 
+    def __mul__(self, other):
+        monomials1 = self.get_monomials(self.string)
+        monomials2 = other.get_monomials(other.string)
+        string = ''
+        for mon1 in monomials1:
+            for mon2 in monomials2:
+                string += '{}*{}'.format(mon1, mon2)
+        new_pol = Polynomial(string)
+        new_pol.simplify()
+
+    def find_bracketed_expression(self):
+        begin = self.string.find('(')
+        end = self.string.find(')')
+        brackets = []
+        if begin != -1:
+            indicator = 1
+            for i in range(begin, end):
+                if self.string[i] == '(':
+                    if indicator == 0:
+                        begin = i
+                    indicator += 1
+                elif self.string[i] == ')':
+                    indicator -= 1
+                if indicator == 0:
+                    brackets.append((begin, i+1))
+        expression = []
+        for el in brackets:
+            polinom = Polynomial(self.string[el[0]:el[1]])
+            expression.append(polinom)
+        return brackets
+
     def simplify(self):
+        bracketed_expression = self.find_bracketed_expression()
+        for expression in bracketed_expression:
+            expression.simplify()
         monomials = self.get_monomials(self.string)
         simple_monomials = []
         for monomial in monomials:
@@ -105,10 +139,28 @@ class Polynomial():
     def get_monomials(self, polinom):
         monomials = []
         monomial_begin = 0
-        for i in range(len(polinom)):
+        i = 0
+        while i < len(polinom):
             if polinom[i] == '+' or polinom[i] == '-':
                 monomials.append(polinom[monomial_begin:i])
                 monomial_begin = i
+            if polinom[i] == '(':
+                expression = []
+                sign = polinom[i-1]
+                if sign == '*':
+                    j = i
+                    while j >= 0 and (polinom[j] != '+' or polinom[j] != '-'):
+                        j -= 1
+                    expression.append(polinom[j:i])
+                indicator = 1
+                for j in range(i+1, len(polinom)):
+                    if polinom[j] == '(':
+                        indicator += 1
+                    elif polinom[j] == ')':
+                        indicator -= -1
+                    if indicator == 0:
+                        expression.append(polinom[i-1:j+1])
+            i += 1
         monomials.append(polinom[monomial_begin:])
         return monomials
 
@@ -125,7 +177,7 @@ class Polynomial():
             if i < len(pol)-1 and \
                     pol[i].lstrip('1234567890+-.') ==\
                     pol[i+1].lstrip('1234567890+-.'):
-                multiplier = re.match(r'-?\d*.\d*', pol[i]).group(0)
+                multiplier = re.match(r'-?\d*\.?\d*', pol[i]).group(0)
                 if multiplier is None or multiplier == '':
                     multiplier = 1
                 elif multiplier == '-':
@@ -135,7 +187,7 @@ class Polynomial():
                 while i < len(pol)-1 and \
                         pol[i].lstrip('1234567890+-.') ==\
                         pol[i+1].lstrip('1234567890+-.'):
-                    k2 = re.match(r'-?\d*.\d*', pol[i+1]).group(0)
+                    k2 = re.match(r'-?\d*\.\d*', pol[i+1]).group(0)
                     if k2 is None or k2 == '':
                         k2 = 1
                     elif k2 == '-':
