@@ -1,4 +1,5 @@
 import re
+from decimal import Decimal
 
 
 class Polynomial():
@@ -172,10 +173,10 @@ class Polynomial():
         return monomials
 
     def multiply(self, numbers):
-        multiple = 1
+        multiple = Decimal('1')
         for number in numbers:
-            multiple *= number
-        return multiple
+            multiple *= Decimal(str(number))
+        return float(multiple)
 
     def add_up_such_terms(self, pol):
         i = 0

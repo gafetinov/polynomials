@@ -81,6 +81,9 @@ class TestPolynomial():
         pol13 = Polynomial('a^0x^1')
         pol13.simplify()
         assert pol13.string == 'x'
+        pol14 = Polynomial('3.1*3.2')
+        pol14.simplify()
+        assert pol14.string == '9.92'
 
     def test_get_monomial(self):
         pol = Polynomial('3k+4h+8k+4')
