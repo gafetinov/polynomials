@@ -258,7 +258,10 @@ class Polynomial():
                     if exponent == 1.0:
                         simple_variable = variables[i][:search]
                     elif exponent == 0.0:
-                        simple_variable = '1.0'
+                        if len(variables) == 1:
+                            simple_variable = '1.0'
+                        else:
+                            simple_variable = ''
                     else:
                         simple_variable = '{}^{}'.format(variables[i][0], float(exponent))
             simple_variables.append(simple_variable)
