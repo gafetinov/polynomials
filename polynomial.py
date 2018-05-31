@@ -16,6 +16,10 @@ class Polynomial():
         new_pol = Polynomial(string)
         new_pol.simplify()
 
+    def is_number(self, input):
+        if re.match(r'-?\d*\.?\d*', input) is not None:
+            return re.match(r'-?\d*\.?\d*', input).group(0) == input
+
     def find_bracketed_expression(self):
         begin = self.string.find('(')
         end = self.string.find(')')
@@ -75,10 +79,12 @@ class Polynomial():
             variables = self.simplify_monomial(variables)
             variables.sort(key=self.sort_by_variables)
             common_multiplier = self.multiply(multipliers)
-            if common_multiplier == 1:
+            if common_multiplier == 1 and variables:
                 common_multiplier = ''
-            elif common_multiplier == -1:
+            elif common_multiplier == -1 and variables:
                 common_multiplier = '-'
+            elif common_multiplier == 0:
+                variables.clear()
             simple_monomials.append(str(common_multiplier)+''.join(variables))
         simple_monomials.sort(key=self.sort_by_monomial, reverse=True)
         simple_monomials = self.add_up_such_terms(simple_monomials)
@@ -90,9 +96,10 @@ class Polynomial():
         exponents = []
         variables = []
         i = 0
-        if input.isdigit():
-            exponents.append(0)
-        input = input.lstrip('123456789+-.')
+        if re.match(r'-?\d*\.?\d*', input) is not None:
+            if re.match(r'-?\d*\.?\d*', input).group(0) == input:
+                exponents.append(0)
+        input = input.lstrip('1234567890+-.')
         while i < len(input):
             if input[i].isdigit():
                 exponent = ''
@@ -108,7 +115,7 @@ class Polynomial():
                 i += 1
             else:
                 i += 1
-        return exponents, variables
+        return max(exponents), variables
 
     def sort_by_variables(self, string):
         if len(string) == 1:
@@ -177,7 +184,11 @@ class Polynomial():
             if i < len(pol)-1 and \
                     pol[i].lstrip('1234567890+-.') ==\
                     pol[i+1].lstrip('1234567890+-.'):
-                multiplier = re.match(r'-?\d*\.?\d*', pol[i]).group(0)
+                source = re.match(r'-?\d*\.?\d*', pol[i])
+                if source is None:
+                    multiplier = 1
+                else:
+                    multiplier = source.group(0)
                 if multiplier is None or multiplier == '':
                     multiplier = 1
                 elif multiplier == '-':
@@ -187,7 +198,11 @@ class Polynomial():
                 while i < len(pol)-1 and \
                         pol[i].lstrip('1234567890+-.') ==\
                         pol[i+1].lstrip('1234567890+-.'):
-                    k2 = re.match(r'-?\d*\.\d*', pol[i+1]).group(0)
+                    source2 = re.match(r'-?\d*\.?\d*', pol[i+1])
+                    if source2 is None:
+                        k2 = 1
+                    else:
+                        k2 = source2.group(0)
                     if k2 is None or k2 == '':
                         k2 = 1
                     elif k2 == '-':
@@ -197,7 +212,7 @@ class Polynomial():
                     multiplier += k2
                     i += 1
                 if multiplier == 0:
-                    simple_pol = '0'
+                    simple_pol = '0.0'
                 elif multiplier == 1:
                     simple_pol = pol[i].lstrip('1234567890+-.')
                 elif multiplier == -1:
@@ -230,9 +245,22 @@ class Polynomial():
                         exponent += float(variables[i+1]
                                           [variables[i+1].find('^')+1:])
                     i += 1
-                simple_variable = '{}^{}'.format(variables[i][0], exponent)
+                simple_variable = '{}^{}'.format(variables[i][0], float(exponent))
             else:
-                simple_variable = variables[i]
+                search = variables[i].find('^')
+                if search == -1:
+                    simple_variable = variables[i]
+                else:
+                    exponent = ''
+                    for j in range(search+1, len(variables[i])):
+                        exponent += variables[i][j]
+                    exponent = float(exponent)
+                    if exponent == 1.0:
+                        simple_variable = variables[i][:search]
+                    elif exponent == 0.0:
+                        simple_variable = '1.0'
+                    else:
+                        simple_variable = '{}^{}'.format(variables[i][0], float(exponent))
             simple_variables.append(simple_variable)
             i += 1
         return simple_variables

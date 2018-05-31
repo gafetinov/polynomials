@@ -34,41 +34,53 @@ class TestPolynomial():
         c = A.simplify_monomial(D)
         k = ['x^23', 'x^2', 'g', 's']
         k = A.simplify_monomial(k)
-        assert c == ['f', 's^2', 'x^2']
-        assert k == ['x^25', 'g', 's']
+        assert c == ['f', 's^2.0', 'x^2.0']
+        assert k == ['x^25.0', 'g', 's']
 
     def test_simplify(self):
         pol1 = Polynomial('3k+4h+8k+4')
         pol1.simplify()
-        assert pol1.get_str() == '11k+4h+4'
+        assert pol1.get_str() == '11.0k+4.0h+4.0'
         pol2 = Polynomial('12+21+abcdg+13A^1212b')
         pol2.simplify()
-        assert pol2.get_str() == '13A^1212b+abcdg+33'
+        assert pol2.get_str() == '13.0A^1212.0b+abcdg+33.0'
         pol3 = Polynomial('a-a')
         pol3.simplify()
-        assert pol3.string == '0'
+        assert pol3.string == '0.0'
         pol4 = Polynomial('0')
         pol4.simplify()
-        assert pol4.string == '0'
+        assert pol4.string == '0.0'
         pol5 = Polynomial('aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa')
         pol5.simplify()
-        assert pol5.string == 'a^49'
+        assert pol5.string == 'a^49.0'
         pol5 = Polynomial('bbbbb'
                           'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa')
         pol5.simplify()
-        assert pol5.string == 'a^49b^5'
+        assert pol5.string == 'a^49.0b^5.0'
         pol6 = Polynomial('2a-a+b-a-b')
         pol6.simplify()
-        assert pol6.string == '0'
+        assert pol6.string == '0.0'
         pol7 = Polynomial('2a-a+2-a')
         pol7.simplify()
-        assert pol7.string == '2'
+        assert pol7.string == '2.0'
         pol8 = Polynomial('3a-2a+2b-b-a')
         pol8.simplify()
-        assert pol8.string == 'b+0'
+        assert pol8.string == 'b+0.0'
         pol9 = Polynomial('3a-2b-4a+2b')
         pol9.simplify()
-        assert pol9.string == '-a+0'
+        assert pol9.string == '-a+0.0'
+        pol10 = Polynomial('x^0')
+        pol10.simplify()
+        assert pol10.string == '1.0'
+        pol11 = Polynomial('1')
+        pol11.simplify()
+        assert pol11.string == '1.0'
+        pol12 = Polynomial('0x')
+        pol12.simplify()
+        assert pol12.string == '0.0'
+        pol13 = Polynomial('a^0x^1')
+        pol13.simplify()
+        assert pol13.string == 'x'
 
     def test_get_monomial(self):
         pol = Polynomial('3k+4h+8k+4')
@@ -86,4 +98,4 @@ class TestPolynomial():
             string = '+'.join(monomials)
             polinom = Polynomial(string)
             polinom.simplify()
-            assert polinom.string == '13A^1212b+a^49b^5+a^49+d^2k^2ln^2s^2v^2+abcdg+4a+23'
+            assert polinom.string == '13.0A^1212.0b+a^49.0b^5.0+a^49.0+d^2.0k^2.0ln^2.0s^2.0v^2.0+abcdg+4.0a+23.0'
