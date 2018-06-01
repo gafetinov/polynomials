@@ -60,7 +60,10 @@ class Polynomial():
                             (monomial[j].isdigit() or monomial[j] == '.'):
                         multiplier += monomial[j]
                         j += 1
-                    multipliers.append(float(multiplier))
+                    if monomial[i-1] != '/':
+                        multipliers.append(float(multiplier))
+                    else:
+                        multipliers.append(1/float(multiplier))
                     i = j - 1
                 elif monomial[i] == '-':
                     multipliers.append(-1)
