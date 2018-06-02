@@ -93,6 +93,9 @@ class TestPolynomial():
         pol17 = Polynomial('0x-1')
         pol17.simplify()
         assert pol17.string == '-1.0'
+        pol18 = Polynomial('-1')
+        pol18.simplify()
+        assert pol18.string == '-1.0'
 
     def test_get_monomial(self):
         pol = Polynomial('3k+4h+8k+4')

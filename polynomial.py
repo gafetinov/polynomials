@@ -155,7 +155,7 @@ class Polynomial():
         monomial_begin = 0
         i = 0
         while i < len(polinom):
-            if polinom[i] == '+' or polinom[i] == '-':
+            if (polinom[i] == '+' or polinom[i] == '-') and i > 0:
                 monomials.append(polinom[monomial_begin:i])
                 monomial_begin = i
             if polinom[i] == '(':
