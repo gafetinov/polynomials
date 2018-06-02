@@ -83,8 +83,11 @@ class Polynomial():
             variables = self.simplify_monomial(variables)
             variables.sort(key=self.sort_by_variables)
             common_multiplier = self.multiply(multipliers)
-            if common_multiplier == 1 and variables:
-                common_multiplier = ''
+            if common_multiplier == 1:
+                if variables:
+                    common_multiplier = ''
+                else:
+                    common_multiplier = 1.0
             elif common_multiplier == -1 and variables:
                 common_multiplier = '-'
             elif common_multiplier == 0:
@@ -219,8 +222,12 @@ class Polynomial():
                     simple_pol = '0.0'
                 elif multiplier == 1:
                     simple_pol = pol[i].lstrip('1234567890+-.')
+                    if not simple_pol:
+                        simple_pol = '1.0'
                 elif multiplier == -1:
                     simple_pol = '-'+pol[i].lstrip('1234567890+-.')
+                    if simple_pol == '-':
+                        simple_pol = '-1.0'
                 else:
                     simple_pol = str(multiplier) + pol[i].lstrip(
                         '1234567890+-.')

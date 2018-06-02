@@ -69,9 +69,9 @@ class TestPolynomial():
         pol9 = Polynomial('3a-2b-4a+2b')
         pol9.simplify()
         assert pol9.string == '-a+0.0'
-        pol10 = Polynomial('x^0')
+        pol10 = Polynomial('x^0+1')
         pol10.simplify()
-        assert pol10.string == '1.0'
+        assert pol10.string == '2.0'
         pol11 = Polynomial('1')
         pol11.simplify()
         assert pol11.string == '1.0'
@@ -87,6 +87,12 @@ class TestPolynomial():
         pol15 = Polynomial('3.1/2x')
         pol15.simplify()
         assert pol15.string == '1.55x'
+        pol16 = Polynomial('0x+1')
+        pol16.simplify()
+        assert pol16.string == '1.0'
+        pol17 = Polynomial('0x-1')
+        pol17.simplify()
+        assert pol17.string == '-1.0'
 
     def test_get_monomial(self):
         pol = Polynomial('3k+4h+8k+4')
