@@ -1,5 +1,6 @@
 import argparse
 from polynomial import Polynomial
+import postfix_notation
 
 
 def main():
@@ -10,7 +11,8 @@ def main():
     arguments = parser.parse_args()
     polynomials = []
     for string in arguments.string:
-        polynomials.append(Polynomial(string))
+        expr = postfix_notation.remove_brackets(string)
+        polynomials.append(Polynomial(expr))
         polynomials[-1].simplify()
     print(polynomials[0].string == polynomials[1].string)
 

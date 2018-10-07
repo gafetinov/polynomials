@@ -1,5 +1,7 @@
 from polynomial import Polynomial
 import random
+from postfix_notation import remove_brackets
+
 D = ['x', 'x', 's', 's', 'f']
 A = Polynomial('example')
 
@@ -41,7 +43,7 @@ class TestPolynomial():
         pol1 = Polynomial('3k+4h+8k+4')
         pol1.simplify()
         assert pol1.get_str() == '11.0k+4.0h+4.0'
-        pol2 = Polynomial('12+21+abcdg+13A^1212b')
+        pol2 = Polynomial('12+21+abcdg+13A^(1212)*b')
         pol2.simplify()
         assert pol2.get_str() == '13.0A^1212.0b+abcdg+33.0'
         pol3 = Polynomial('a-a')
@@ -96,6 +98,18 @@ class TestPolynomial():
         pol18 = Polynomial('-1+0')
         pol18.simplify()
         assert pol18.string == '-1.0'
+        pol19 = Polynomial('2*x-b')
+        pol19.simplify()
+        assert pol19.string == '2.0x-b'
+        pol20 = Polynomial('(a-b)^2')
+        pol20.simplify()
+        assert pol20.string == 'b^2.0+a^2.0-2.0ab'
+        pol21 = Polynomial('(b^2+a^2-2.0ab)')
+        pol21.simplify()
+        assert pol21.string == 'b^2.0+a^2.0-2.0ab'
+        pol22 = Polynomial('(a-b)(a-b)')
+        pol22.simplify()
+        assert pol22.string == pol20.string
 
     def test_get_monomial(self):
         pol = Polynomial('3k+4h+8k+4')

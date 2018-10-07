@@ -2,6 +2,9 @@ import re
 from decimal import Decimal
 
 
+OPERATORSPRIORITY = {"*": 2, "/": 2, "+": 1, "-": 1, "^": 3}
+
+
 class Polynomial():
     def __init__(self, string):
         self.string = string
@@ -21,31 +24,9 @@ class Polynomial():
         if re.match(r'-?\d*\.?\d*', input) is not None:
             return re.match(r'-?\d*\.?\d*', input).group(0) == input
 
-    def find_bracketed_expression(self):
-        begin = self.string.find('(')
-        end = self.string.find(')')
-        brackets = []
-        if begin != -1:
-            indicator = 1
-            for i in range(begin, end):
-                if self.string[i] == '(':
-                    if indicator == 0:
-                        begin = i
-                    indicator += 1
-                elif self.string[i] == ')':
-                    indicator -= 1
-                if indicator == 0:
-                    brackets.append((begin, i+1))
-        expression = []
-        for el in brackets:
-            polinom = Polynomial(self.string[el[0]:el[1]])
-            expression.append(polinom)
-        return brackets
-
     def simplify(self):
-        bracketed_expression = self.find_bracketed_expression()
-        for expression in bracketed_expression:
-            expression.simplify()
+        if "(" in self.string or ")" in self.string:
+            self.string = self.remove_brackets(self.string)
         monomials = self.get_monomials(self.string)
         simple_monomials = []
         for monomial in monomials:
@@ -82,7 +63,7 @@ class Polynomial():
             variables.sort(key=self.sort_by_variables)
             variables = self.simplify_monomial(variables)
             variables.sort(key=self.sort_by_variables)
-            common_multiplier = self.multiply(multipliers)
+            common_multiplier = self.multiply_numbers(multipliers)
             if common_multiplier == 1:
                 if variables:
                     common_multiplier = ''
@@ -97,7 +78,15 @@ class Polynomial():
         simple_monomials = self.add_up_such_terms(simple_monomials)
         simple_monomials = self.add_up_such_terms(simple_monomials)
         simple_monomials.sort(key=self.sort_by_monomial, reverse=True)
-        self.string = '+'.join(simple_monomials)
+        self.string = self.glue_monomials(simple_monomials)
+
+    def glue_monomials(self, monomials):
+        result = monomials[0]
+        for i in range(1, len(monomials)):
+            if monomials[i][0] != "-":
+                result += "+"
+            result += monomials[i]
+        return result
 
     def sort_by_monomial(self, input):
         exponents = []
@@ -178,7 +167,7 @@ class Polynomial():
         monomials.append(polinom[monomial_begin:])
         return monomials
 
-    def multiply(self, numbers):
+    def multiply_numbers(self, numbers):
         multiple = Decimal('1')
         for number in numbers:
             multiple *= Decimal(str(number))
@@ -229,7 +218,7 @@ class Polynomial():
                     if simple_pol == '-':
                         simple_pol = '-1.0'
                 else:
-                    simple_pol = str(multiplier) + pol[i].lstrip(
+                    simple_pol = str(float(multiplier)) + pol[i].lstrip(
                         '1234567890+-.')
             else:
                 simple_pol = pol[i]
@@ -278,6 +267,242 @@ class Polynomial():
             simple_variables.append(simple_variable)
             i += 1
         return simple_variables
+
+    def get_postfix(self, expression):
+        stack = []
+        out_string = []
+        prev_symb = ""
+        sign = "+"
+        for i in range(len(expression)):
+            symb = expression[i]
+            if symb.isdigit():
+                if prev_symb.isdigit() or prev_symb == ".":
+                    out_string[-1] += symb
+                    prev_symb = symb
+                    continue
+                if sign == "-":
+                    out_string.append("-" + symb)
+                else:
+                    out_string.append(symb)
+                sign = "+"
+            elif symb == ".":
+                if prev_symb.isdigit():
+                    out_string[-1] += symb
+                else:
+                    print("Непонятная точка")
+                    exit(1)
+            elif symb.isalpha():
+                if prev_symb.isalpha() or prev_symb.isdigit():
+                    while len(stack) != 0 and \
+                            stack[-1] in OPERATORSPRIORITY and \
+                            OPERATORSPRIORITY["*"] <= OPERATORSPRIORITY[
+                            stack[-1]]:
+                        out_string.append(stack.pop())
+                    stack.append("*")
+                if sign == "-":
+                    out_string.append("-" + symb)
+                else:
+                    out_string.append(symb)
+                sign = "+"
+            elif symb == "(":
+                if prev_symb == ")":
+                    stack.append("*")
+                stack.append(symb)
+            elif symb == ")":
+                while stack[-1] != "(":
+                    out_string.append(stack.pop())
+                stack.pop()
+            elif symb in OPERATORSPRIORITY:
+                if symb == "-":
+                    if i == 0 or prev_symb == '(':
+                        sign = "-"
+                        continue
+                while len(stack) != 0 and \
+                        stack[-1] in OPERATORSPRIORITY and \
+                        OPERATORSPRIORITY[symb] <= OPERATORSPRIORITY[
+                    stack[-1]]:
+                    out_string.append(stack.pop())
+                stack.append(symb)
+            prev_symb = symb
+        for i in range(len(stack)):
+            out_string.append(stack.pop())
+        return out_string
+
+    def read_postfix(self, expression):
+        stack = []
+        for el in expression:
+            if el not in OPERATORSPRIORITY:
+                stack.append(el)
+            else:
+                arg1 = stack[-2]
+                arg2 = stack[-1]
+                res = 0
+                if self.isdigit(arg1) and self.isdigit(arg2):
+                    arg1 = float(arg1)
+                    arg2 = float(arg2)
+                    if el == "+":
+                        res = arg1 + arg2
+                    elif el == "-":
+                        res = arg1 - arg2
+                    elif el == "*":
+                        res = float(Decimal(str(arg1)) * Decimal(str(arg2)))
+                    elif el == "/":
+                        res = float(Decimal(str(arg1)) / Decimal(str(arg2)))
+                    elif el == "^":
+                        res = arg1 ** arg2
+                else:
+                    if el == "+":
+                        res = arg1
+                        if arg2[0] == "-":
+                            res += "-"
+                            res += arg2[1:]
+                        else:
+                            res += "+"
+                            res += arg2
+                    elif el == "-":
+                        res = arg1
+                        if arg2[0] != "-":
+                            res += "-"
+                        for symb in arg2:
+                            if symb == "-":
+                                res += "+"
+                            elif symb == "+":
+                                res += "-"
+                            else:
+                                res += symb
+                    elif el == "*":
+                        res = self.multiply(arg1, arg2)
+                    elif el == "/":
+                        if self.isdigit(arg2):
+                            arg2 = float(Decimal('1')/Decimal(str(arg2)))
+                            res = self.multiply(arg1, arg2)
+                        else:
+                            print("You can divide only by number")
+                            exit(1)
+                    elif el == "^":
+                        if arg2.isdigit():
+                            arg2 = int(arg2)
+                            if arg2 == 0:
+                                res = "1"
+                            else:
+                                res = arg1
+                                while arg2 > 1:
+                                    res = self.multiply(res, arg1)
+                                    arg2 -= 1
+                        else:
+                            print(
+                                "The expression with variables can be built "
+                                "only in the natural degree.")
+                            exit(1)
+                stack.pop()
+                stack[-1] = str(res)
+        return stack[0]
+
+    def multiply(self, expr1, expr2):
+        if self.isdigit(expr1):
+            return self.multiply_bracket_by_number(expr2, expr1)
+        elif self.isdigit(expr2):
+            return self.multiply_bracket_by_number(expr1, expr2)
+        else:
+            return self.multiply_brackets(expr1, expr2)
+
+    def multiply_brackets(self, expr1, expr2):
+        args1 = []
+        args2 = []
+        arg = ""
+        start = 0
+        if expr1[0] == "-":
+            arg += "-"
+            start = 1
+        else:
+            arg += "+"
+        for i in range(start, len(expr1)):
+            if expr1[i] != "-" and expr1[i] != "+":
+                arg += expr1[i]
+            else:
+                args1.append(arg)
+                arg = expr1[i]
+        args1.append(arg)
+        if expr2[0] == "-":
+            arg = "-"
+            start = 1
+        else:
+            arg = "+"
+            start = 0
+        for i in range(start, len(expr2)):
+            if expr2[i] != "-" and expr2[i] != "+":
+                arg += expr2[i]
+            else:
+                args2.append(arg)
+                arg = expr2[i]
+        args2.append(arg)
+        res = ""
+        for arg1 in args1:
+            for arg2 in args2:
+                if arg1[0] == arg2[0]:
+                    if len(res) > 0:
+                        res += "+" + arg1[1:] + "*" + arg2[1:]
+                    else:
+                        res = arg1[1:] + "*" + arg2[1:]
+                else:
+                    if len(res) > 0:
+                        res += "-" + arg1[1:] + "*" + arg2[1:]
+                    else:
+                        res = "-" + arg1[1:] + "*" + arg2[1:]
+        return res
+
+    def multiply_bracket_by_number(self, bracket, number):
+        if bracket[0] != "-":
+            bracket = str(number) + "*" + bracket
+        if float(number) >= 0:
+            res = ""
+            i = 0
+            while i < len(bracket):
+                if bracket[i] == "+":
+                    res += "+" + str(number) + "*"
+                elif bracket[i] == "-":
+                    res += "-" + str(number) + "*"
+                else:
+                    res += bracket[i]
+                i += 1
+        else:
+            res = "-"
+            i = 1
+            while i < len(bracket):
+                if bracket[i] == "+":
+                    res += "-" + str(number)[1:] + "*"
+                elif bracket[i] == "-":
+                    res += "+" + str(number)[1:] + "*"
+                else:
+                    res += bracket[i]
+                i += 1
+        return res
+
+    def isdigit(self, string):
+        start = 1
+        if type(string) is int or type(string) is float:
+            return True
+        if string[0] == "-":
+            if len(string) == 1:
+                return False
+            start = 2
+        if string[start - 1].isdigit():
+            is_integer = True
+        else:
+            return False
+        for i in range(start, len(string)):
+            if string[i] == '.':
+                if is_integer is False:
+                    return False
+                else:
+                    is_integer = False
+            elif not string[i].isdigit():
+                return False
+        return True
+
+    def remove_brackets(self, expr):
+        postfix = self.get_postfix(expr)
+        return self.read_postfix(postfix)
 
     def get_str(self):
         return self.string
