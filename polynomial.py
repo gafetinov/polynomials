@@ -6,6 +6,7 @@ OPERATORSPRIORITY = {"*": 2, "/": 2, "+": 1, "-": 1, "^": 3}
 
 
 class Polynomial():
+
     def __init__(self, string):
         self.string = string
         self.errors = self.check_for_errors()
@@ -53,7 +54,7 @@ class Polynomial():
                     if i < len(monomial)-1 and monomial[i+1] == '^':
                         variable += monomial[i+1:i+2]
                         j = i + 2
-                        while j < len(monomial) and\
+                        while j < len(monomial) and \
                                 (monomial[j].isdigit() or monomial[j] == '.'):
                             variable += monomial[j]
                             j += 1
@@ -80,193 +81,9 @@ class Polynomial():
         simple_monomials.sort(key=self.sort_by_monomial, reverse=True)
         self.string = self.glue_monomials(simple_monomials)
 
-    def glue_monomials(self, monomials):
-        result = monomials[0]
-        for i in range(1, len(monomials)):
-            if monomials[i][0] != "-":
-                result += "+"
-            result += monomials[i]
-        return result
-
-    def sort_by_monomial(self, input):
-        exponents = []
-        variables = []
-        i = 0
-        if re.match(r'-?\d*\.?\d*', input) is not None:
-            if re.match(r'-?\d*\.?\d*', input).group(0) == input:
-                exponents.append(0)
-        input = input.lstrip('1234567890+-.')
-        while i < len(input):
-            if input[i].isdigit():
-                exponent = ''
-                while i < len(input) and\
-                        (input[i].isdigit() or input[i] == '.'):
-                    exponent += input[i]
-                    i += 1
-                exponents.append(float(exponent))
-            elif input[i].isalpha():
-                variables.append(str(input[i]))
-                if i == len(input)-1 or input[i+1] != '^':
-                    exponents.append(1)
-                i += 1
-            else:
-                i += 1
-        return max(exponents), variables
-
-    def sort_by_variables(self, string):
-        if len(string) == 1:
-            return string[0]
-        else:
-            return string[2:] and string[0]
-
-    def check_for_errors(self):
-        index = 0
-        errors = []
-        operators = ['+', '-', '*', '/']
-        brackets = 0
-        previous_symbol = ''
-        for symbol in self.string:
-            if symbol == '(':
-                brackets += 1
-            elif symbol == ')':
-                brackets -= 1
-            if brackets < 0:
-                errors.append((index, 'E01'))
-            if previous_symbol in operators and symbol in operators:
-                errors.append((index, 'E02'))
-            index += 1
-            previous_symbol = symbol
-        if self.string[-1] in operators:
-            errors.append((index, 'E03'))
-
-    def get_monomials(self, polinom):
-        monomials = []
-        monomial_begin = 0
-        i = 0
-        while i < len(polinom):
-            if (polinom[i] == '+' or polinom[i] == '-') and i > 0:
-                monomials.append(polinom[monomial_begin:i])
-                monomial_begin = i
-            if polinom[i] == '(':
-                expression = []
-                sign = polinom[i-1]
-                if sign == '*':
-                    j = i
-                    while j >= 0 and (polinom[j] != '+' or polinom[j] != '-'):
-                        j -= 1
-                    expression.append(polinom[j:i])
-                indicator = 1
-                for j in range(i+1, len(polinom)):
-                    if polinom[j] == '(':
-                        indicator += 1
-                    elif polinom[j] == ')':
-                        indicator -= -1
-                    if indicator == 0:
-                        expression.append(polinom[i-1:j+1])
-            i += 1
-        monomials.append(polinom[monomial_begin:])
-        return monomials
-
-    def multiply_numbers(self, numbers):
-        multiple = Decimal('1')
-        for number in numbers:
-            multiple *= Decimal(str(number))
-        return float(multiple)
-
-    def add_up_such_terms(self, pol):
-        i = 0
-        simple_pols = []
-        while i < len(pol):
-            if i < len(pol)-1 and \
-                    pol[i].lstrip('1234567890+-.') ==\
-                    pol[i+1].lstrip('1234567890+-.'):
-                source = re.match(r'-?\d*\.?\d*', pol[i])
-                if source is None:
-                    multiplier = 1
-                else:
-                    multiplier = source.group(0)
-                if multiplier is None or multiplier == '':
-                    multiplier = 1
-                elif multiplier == '-':
-                    multiplier = -1
-                else:
-                    multiplier = float(multiplier)
-                while i < len(pol)-1 and \
-                        pol[i].lstrip('1234567890+-.') ==\
-                        pol[i+1].lstrip('1234567890+-.'):
-                    source2 = re.match(r'-?\d*\.?\d*', pol[i+1])
-                    if source2 is None:
-                        k2 = 1
-                    else:
-                        k2 = source2.group(0)
-                    if k2 is None or k2 == '':
-                        k2 = 1
-                    elif k2 == '-':
-                        k2 = -1
-                    else:
-                        k2 = float(k2)
-                    multiplier += k2
-                    i += 1
-                if multiplier == 0:
-                    simple_pol = '0.0'
-                elif multiplier == 1:
-                    simple_pol = pol[i].lstrip('1234567890+-.')
-                    if not simple_pol:
-                        simple_pol = '1.0'
-                elif multiplier == -1:
-                    simple_pol = '-'+pol[i].lstrip('1234567890+-.')
-                    if simple_pol == '-':
-                        simple_pol = '-1.0'
-                else:
-                    simple_pol = str(float(multiplier)) + pol[i].lstrip(
-                        '1234567890+-.')
-            else:
-                simple_pol = pol[i]
-            simple_pols.append(simple_pol)
-            i += 1
-        return simple_pols
-
-    def simplify_monomial(self, variables):
-        simple_variables = []
-        i = 0
-        while i < len(variables):
-            if i < len(variables)-1 and variables[i][0] == variables[i+1][0]:
-                exponent = 0
-                if len(variables[i]) == 1:
-                    exponent += 1
-                else:
-                    exponent += float(variables[i]
-                                      [variables[i].find('^') + 1:])
-                while i < len(variables)-1 and \
-                        variables[i][0] == variables[i+1][0]:
-                    if len(variables[i+1]) == 1:
-                        exponent += 1
-                    else:
-                        exponent += float(variables[i+1]
-                                          [variables[i+1].find('^')+1:])
-                    i += 1
-                simple_variable = '{}^{}'.format(variables[i][0], float(exponent))
-            else:
-                search = variables[i].find('^')
-                if search == -1:
-                    simple_variable = variables[i]
-                else:
-                    exponent = ''
-                    for j in range(search+1, len(variables[i])):
-                        exponent += variables[i][j]
-                    exponent = float(exponent)
-                    if exponent == 1.0:
-                        simple_variable = variables[i][:search]
-                    elif exponent == 0.0:
-                        if len(variables) == 1:
-                            simple_variable = '1.0'
-                        else:
-                            simple_variable = ''
-                    else:
-                        simple_variable = '{}^{}'.format(variables[i][0], float(exponent))
-            simple_variables.append(simple_variable)
-            i += 1
-        return simple_variables
+    def remove_brackets(self, expr):
+        postfix = self.get_postfix(expr)
+        return self.read_postfix(postfix)
 
     def get_postfix(self, expression):
         stack = []
@@ -398,6 +215,196 @@ class Polynomial():
                 stack[-1] = str(res)
         return stack[0]
 
+    def glue_monomials(self, monomials):
+        result = monomials[0]
+        for i in range(1, len(monomials)):
+            if monomials[i][0] != "-":
+                result += "+"
+            result += monomials[i]
+        return result
+
+    def sort_by_monomial(self, input):
+        exponents = []
+        variables = []
+        i = 0
+        if re.match(r'-?\d*\.?\d*', input) is not None:
+            if re.match(r'-?\d*\.?\d*', input).group(0) == input:
+                exponents.append(0)
+        input = input.lstrip('1234567890+-.')
+        while i < len(input):
+            if input[i].isdigit():
+                exponent = ''
+                while i < len(input) and \
+                        (input[i].isdigit() or input[i] == '.'):
+                    exponent += input[i]
+                    i += 1
+                exponents.append(float(exponent))
+            elif input[i].isalpha():
+                variables.append(str(input[i]))
+                if i == len(input)-1 or input[i+1] != '^':
+                    exponents.append(1)
+                i += 1
+            else:
+                i += 1
+        return max(exponents), variables
+
+    def sort_by_variables(self, string):
+        if len(string) == 1:
+            return string[0]
+        else:
+            return string[2:] and string[0]
+
+    def check_for_errors(self):
+        index = 0
+        errors = []
+        operators = ['+', '-', '*', '/']
+        brackets = 0
+        previous_symbol = ''
+        for symbol in self.string:
+            if symbol == '(':
+                brackets += 1
+            elif symbol == ')':
+                brackets -= 1
+            if brackets < 0:
+                errors.append((index, 'E01'))
+            if previous_symbol in operators and symbol in operators:
+                errors.append((index, 'E02'))
+            index += 1
+            previous_symbol = symbol
+        if self.string[-1] in operators:
+            errors.append((index, 'E03'))
+
+    def get_monomials(self, polinom):
+        monomials = []
+        monomial_begin = 0
+        i = 0
+        while i < len(polinom):
+            if (polinom[i] == '+' or polinom[i] == '-') and i > 0:
+                monomials.append(polinom[monomial_begin:i])
+                monomial_begin = i
+            if polinom[i] == '(':
+                expression = []
+                sign = polinom[i-1]
+                if sign == '*':
+                    j = i
+                    while j >= 0 and (polinom[j] != '+' or polinom[j] != '-'):
+                        j -= 1
+                    expression.append(polinom[j:i])
+                indicator = 1
+                for j in range(i+1, len(polinom)):
+                    if polinom[j] == '(':
+                        indicator += 1
+                    elif polinom[j] == ')':
+                        indicator -= -1
+                    if indicator == 0:
+                        expression.append(polinom[i-1:j+1])
+            i += 1
+        monomials.append(polinom[monomial_begin:])
+        return monomials
+
+    def multiply_numbers(self, numbers):
+        multiple = Decimal('1')
+        for number in numbers:
+            multiple *= Decimal(str(number))
+        return float(multiple)
+
+    def add_up_such_terms(self, pol):
+        i = 0
+        simple_pols = []
+        while i < len(pol):
+            if i < len(pol)-1 and \
+                    pol[i].lstrip('1234567890+-.') == \
+                    pol[i+1].lstrip('1234567890+-.'):
+                source = re.match(r'-?\d*\.?\d*', pol[i])
+                if source is None:
+                    multiplier = 1
+                else:
+                    multiplier = source.group(0)
+                if multiplier is None or multiplier == '':
+                    multiplier = 1
+                elif multiplier == '-':
+                    multiplier = -1
+                else:
+                    multiplier = float(multiplier)
+                while i < len(pol)-1 and \
+                        pol[i].lstrip('1234567890+-.') == \
+                        pol[i+1].lstrip('1234567890+-.'):
+                    source2 = re.match(r'-?\d*\.?\d*', pol[i+1])
+                    if source2 is None:
+                        k2 = 1
+                    else:
+                        k2 = source2.group(0)
+                    if k2 is None or k2 == '':
+                        k2 = 1
+                    elif k2 == '-':
+                        k2 = -1
+                    else:
+                        k2 = float(k2)
+                    multiplier += k2
+                    i += 1
+                if multiplier == 0:
+                    simple_pol = '0.0'
+                elif multiplier == 1:
+                    simple_pol = pol[i].lstrip('1234567890+-.')
+                    if not simple_pol:
+                        simple_pol = '1.0'
+                elif multiplier == -1:
+                    simple_pol = '-'+pol[i].lstrip('1234567890+-.')
+                    if simple_pol == '-':
+                        simple_pol = '-1.0'
+                else:
+                    simple_pol = str(float(multiplier)) + pol[i].lstrip(
+                        '1234567890+-.')
+            else:
+                simple_pol = pol[i]
+            simple_pols.append(simple_pol)
+            i += 1
+        return simple_pols
+
+    def simplify_monomial(self, variables):
+        simple_variables = []
+        i = 0
+        while i < len(variables):
+            if i < len(variables)-1 and variables[i][0] == variables[i+1][0]:
+                exponent = 0
+                if len(variables[i]) == 1:
+                    exponent += 1
+                else:
+                    exponent += float(variables[i]
+                                      [variables[i].find('^') + 1:])
+                while i < len(variables)-1 and \
+                        variables[i][0] == variables[i+1][0]:
+                    if len(variables[i+1]) == 1:
+                        exponent += 1
+                    else:
+                        exponent += float(variables[i+1]
+                                          [variables[i+1].find('^')+1:])
+                    i += 1
+                simple_variable = '{}^{}'.format(variables[i][0],
+                                                 float(exponent))
+            else:
+                search = variables[i].find('^')
+                if search == -1:
+                    simple_variable = variables[i]
+                else:
+                    exponent = ''
+                    for j in range(search+1, len(variables[i])):
+                        exponent += variables[i][j]
+                    exponent = float(exponent)
+                    if exponent == 1.0:
+                        simple_variable = variables[i][:search]
+                    elif exponent == 0.0:
+                        if len(variables) == 1:
+                            simple_variable = '1.0'
+                        else:
+                            simple_variable = ''
+                    else:
+                        simple_variable = '{}^{}'.format(variables[i][0],
+                                                         float(exponent))
+            simple_variables.append(simple_variable)
+            i += 1
+        return simple_variables
+
     def multiply(self, expr1, expr2):
         if self.isdigit(expr1):
             return self.multiply_bracket_by_number(expr2, expr1)
@@ -499,10 +506,6 @@ class Polynomial():
             elif not string[i].isdigit():
                 return False
         return True
-
-    def remove_brackets(self, expr):
-        postfix = self.get_postfix(expr)
-        return self.read_postfix(postfix)
 
     def get_str(self):
         return self.string

@@ -1,6 +1,5 @@
 from polynomial import Polynomial
 import random
-from postfix_notation import remove_brackets
 
 D = ['x', 'x', 's', 's', 'f']
 A = Polynomial('example')
@@ -8,7 +7,7 @@ A = Polynomial('example')
 
 class TestPolynomial():
     def test_sort_by_monomial(self):
-        a = ['y', 'x^3'] #asd
+        a = ['y', 'x^3']
         b = Polynomial('example')
         c = ['x^23', '12', 'x^3y^3abc']
         d = ['12', '12A^1212b', 'abcdg', '21', 'bbcdg']
@@ -127,4 +126,10 @@ class TestPolynomial():
             string = '+'.join(monomials)
             polinom = Polynomial(string)
             polinom.simplify()
-            assert polinom.string == '13.0A^1212.0b+a^49.0b^5.0+a^49.0+d^2.0k^2.0ln^2.0s^2.0v^2.0+abcdg+4.0a+23.0'
+            assert polinom.string == '13.0A^1212.0b+' \
+                                     'a^49.0b^5.0+' \
+                                     'a^49.0+' \
+                                     'd^2.0k^2.0ln^2.0s^2.0v^2.0+' \
+                                     'abcdg+' \
+                                     '4.0a+' \
+                                     '23.0'
