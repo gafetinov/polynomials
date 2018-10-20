@@ -1,5 +1,6 @@
 from polynomial import Polynomial
 import random
+import itertools
 
 D = ['x', 'x', 's', 's', 'f']
 A = Polynomial('example')
@@ -38,26 +39,23 @@ class TestPolynomial():
         assert c == ['f', 's^2.0', 'x^2.0']
         assert k == ['x^25.0', 'g', 's']
 
-    def test_simplify(self):
+    def test_simplify1(self):
         pol1 = Polynomial('3k+4h+8k+4')
         pol1.simplify()
         assert pol1.get_str() == '11.0k+4.0h+4.0'
+
+    def test_simplyfy2(self):
         pol2 = Polynomial('12+21+abcdg+13A^(1212)*b')
         pol2.simplify()
         assert pol2.get_str() == '13.0A^1212.0b+abcdg+33.0'
+
+    def test_simplyfy3(self):
         pol3 = Polynomial('a-a')
         pol3.simplify()
         assert pol3.string == '0.0'
         pol4 = Polynomial('0')
         pol4.simplify()
         assert pol4.string == '0.0'
-        pol5 = Polynomial('aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa')
-        pol5.simplify()
-        assert pol5.string == 'a^49.0'
-        pol5 = Polynomial('bbbbb'
-                          'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa')
-        pol5.simplify()
-        assert pol5.string == 'a^49.0b^5.0'
         pol6 = Polynomial('2a-a+b-a-b')
         pol6.simplify()
         assert pol6.string == '0.0'
@@ -70,24 +68,39 @@ class TestPolynomial():
         pol9 = Polynomial('3a-2b-4a+2b')
         pol9.simplify()
         assert pol9.string == '-a+0.0'
+
+    def test_simplyfy4(self):
+        pol5 = Polynomial('aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa')
+        pol5.simplify()
+        assert pol5.string == 'a^49.0'
+        pol5 = Polynomial('bbbbb'
+                          'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa')
+        pol5.simplify()
+        assert pol5.string == 'a^49.0b^5.0'
+
+    def test_simplify6(self):
         pol10 = Polynomial('x^0+1')
         pol10.simplify()
         assert pol10.string == '2.0'
-        pol11 = Polynomial('1')
-        pol11.simplify()
-        assert pol11.string == '1.0'
         pol12 = Polynomial('0x')
         pol12.simplify()
         assert pol12.string == '0.0'
         pol13 = Polynomial('a^0x^1')
         pol13.simplify()
         assert pol13.string == 'x'
+
+    def test_simplify7(self):
+        pol11 = Polynomial('1')
+        pol11.simplify()
+        assert pol11.string == '1.0'
         pol14 = Polynomial('3.1*3.2')
         pol14.simplify()
         assert pol14.string == '9.92'
         pol15 = Polynomial('3.1/2x')
         pol15.simplify()
         assert pol15.string == '1.55x'
+
+    def test_simplify8(self):
         pol16 = Polynomial('0x+1')
         pol16.simplify()
         assert pol16.string == '1.0'
@@ -97,18 +110,19 @@ class TestPolynomial():
         pol18 = Polynomial('-1+0')
         pol18.simplify()
         assert pol18.string == '-1.0'
+
+    def test_simplify9(self):
         pol19 = Polynomial('2*x-b')
         pol19.simplify()
         assert pol19.string == '2.0x-b'
+
+    def test_simplify10(self):
         pol20 = Polynomial('(a-b)^2')
         pol20.simplify()
         assert pol20.string == 'b^2.0+a^2.0-2.0ab'
         pol21 = Polynomial('(b^2+a^2-2.0ab)')
         pol21.simplify()
         assert pol21.string == 'b^2.0+a^2.0-2.0ab'
-        pol22 = Polynomial('(a-b)(a-b)')
-        pol22.simplify()
-        assert pol22.string == pol20.string
 
     def test_get_monomial(self):
         pol = Polynomial('3k+4h+8k+4')
@@ -121,9 +135,9 @@ class TestPolynomial():
                      'bbbbb'
                      'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa',
                      'vnsdkvndskl']
-        for i in range(100):
-            random.shuffle(monomials)
-            string = '+'.join(monomials)
+        permutations = itertools.permutations(monomials)
+        for perm in permutations:
+            string = '+'.join(perm)
             polinom = Polynomial(string)
             polinom.simplify()
             assert polinom.string == '13.0A^1212.0b+' \
@@ -133,3 +147,17 @@ class TestPolynomial():
                                      'abcdg+' \
                                      '4.0a+' \
                                      '23.0'
+
+    def test_comparison(self):
+        assert self.pol_eq('1+x', 'x+2-1') is True
+        assert self.pol_eq('(a-b)(a-b)', '(a-b)^2') is True
+        assert self.pol_eq('(x-y)(x+y)', 'xx-y^2') is False
+        assert self.pol_eq('3.1+3.2', '6.3') is True
+        assert self.pol_eq('3.1*3.2', '9.92') is True
+
+    def pol_eq(self, s1, s2):
+        pol1 = Polynomial(s1)
+        pol1.simplify()
+        pol2 = Polynomial(s2)
+        pol2.simplify()
+        return pol1.string == pol2.string

@@ -5,28 +5,17 @@ from decimal import Decimal
 OPERATORSPRIORITY = {"*": 2, "/": 2, "+": 1, "-": 1, "^": 3}
 
 
-class Polynomial():
+class Polynomial:
 
     def __init__(self, string):
         self.string = string
-        self.errors = self.check_for_errors()
 
-    def __mul__(self, other):
-        monomials1 = self.get_monomials(self.string)
-        monomials2 = other.get_monomials(other.string)
-        string = ''
-        for mon1 in monomials1:
-            for mon2 in monomials2:
-                string += '{}*{}'.format(mon1, mon2)
-        new_pol = Polynomial(string)
-        new_pol.simplify()
-
-    def is_number(self, input):
-        if re.match(r'-?\d*\.?\d*', input) is not None:
-            return re.match(r'-?\d*\.?\d*', input).group(0) == input
+    def is_number(self, symbols):
+        if re.match(r'-?\d*\.?\d*', symbols) is not None:
+            return re.match(r'-?\d*\.?\d*', symbols).group(0) == symbols
 
     def simplify(self):
-        if "(" in self.string or ")" in self.string:
+        if "(" in self.string:
             self.string = self.remove_brackets(self.string)
         monomials = self.get_monomials(self.string)
         simple_monomials = []
@@ -105,9 +94,6 @@ class Polynomial():
             elif symb == ".":
                 if prev_symb.isdigit():
                     out_string[-1] += symb
-                else:
-                    print("Непонятная точка")
-                    exit(1)
             elif symb.isalpha():
                 if prev_symb.isalpha() or prev_symb.isdigit():
                     while len(stack) != 0 and \
@@ -137,7 +123,7 @@ class Polynomial():
                 while len(stack) != 0 and \
                         stack[-1] in OPERATORSPRIORITY and \
                         OPERATORSPRIORITY[symb] <= OPERATORSPRIORITY[
-                    stack[-1]]:
+                        stack[-1]]:
                     out_string.append(stack.pop())
                 stack.append(symb)
             prev_symb = symb
@@ -155,18 +141,18 @@ class Polynomial():
                 arg2 = stack[-1]
                 res = 0
                 if self.isdigit(arg1) and self.isdigit(arg2):
-                    arg1 = float(arg1)
-                    arg2 = float(arg2)
+                    arg1 = Decimal(str(arg1))
+                    arg2 = Decimal(str(arg2))
                     if el == "+":
-                        res = arg1 + arg2
+                        res = float(arg1 + arg2)
                     elif el == "-":
-                        res = arg1 - arg2
+                        res = float(arg1 - arg2)
                     elif el == "*":
-                        res = float(Decimal(str(arg1)) * Decimal(str(arg2)))
+                        res = float(arg1 * arg2)
                     elif el == "/":
-                        res = float(Decimal(str(arg1)) / Decimal(str(arg2)))
+                        res = float(arg1 / arg2)
                     elif el == "^":
-                        res = arg1 ** arg2
+                        res = float(arg1 ** arg2)
                 else:
                     if el == "+":
                         res = arg1
@@ -194,8 +180,8 @@ class Polynomial():
                             arg2 = float(Decimal('1')/Decimal(str(arg2)))
                             res = self.multiply(arg1, arg2)
                         else:
-                            print("You can divide only by number")
-                            exit(1)
+                            raise ArithmeticError("You can divide "
+                                                  "only by number")
                     elif el == "^":
                         if arg2.isdigit():
                             arg2 = int(arg2)
@@ -207,10 +193,10 @@ class Polynomial():
                                     res = self.multiply(res, arg1)
                                     arg2 -= 1
                         else:
-                            print(
-                                "The expression with variables can be built "
-                                "only in the natural degree.")
-                            exit(1)
+                            raise ArithmeticError("The expression with "
+                                                  "variables can be built "
+                                                  "only in the natural "
+                                                  "degree")
                 stack.pop()
                 stack[-1] = str(res)
         return stack[0]
@@ -223,25 +209,25 @@ class Polynomial():
             result += monomials[i]
         return result
 
-    def sort_by_monomial(self, input):
+    def sort_by_monomial(self, monomials):
         exponents = []
         variables = []
         i = 0
-        if re.match(r'-?\d*\.?\d*', input) is not None:
-            if re.match(r'-?\d*\.?\d*', input).group(0) == input:
+        if re.match(r'-?\d*\.?\d*', monomials) is not None:
+            if re.match(r'-?\d*\.?\d*', monomials).group(0) == monomials:
                 exponents.append(0)
-        input = input.lstrip('1234567890+-.')
-        while i < len(input):
-            if input[i].isdigit():
+        monomials = monomials.lstrip('1234567890+-.')
+        while i < len(monomials):
+            if monomials[i].isdigit():
                 exponent = ''
-                while i < len(input) and \
-                        (input[i].isdigit() or input[i] == '.'):
-                    exponent += input[i]
+                while i < len(monomials) and \
+                        (monomials[i].isdigit() or monomials[i] == '.'):
+                    exponent += monomials[i]
                     i += 1
                 exponents.append(float(exponent))
-            elif input[i].isalpha():
-                variables.append(str(input[i]))
-                if i == len(input)-1 or input[i+1] != '^':
+            elif monomials[i].isalpha():
+                variables.append(str(monomials[i]))
+                if i == len(monomials)-1 or monomials[i+1] != '^':
                     exponents.append(1)
                 i += 1
             else:
@@ -253,26 +239,6 @@ class Polynomial():
             return string[0]
         else:
             return string[2:] and string[0]
-
-    def check_for_errors(self):
-        index = 0
-        errors = []
-        operators = ['+', '-', '*', '/']
-        brackets = 0
-        previous_symbol = ''
-        for symbol in self.string:
-            if symbol == '(':
-                brackets += 1
-            elif symbol == ')':
-                brackets -= 1
-            if brackets < 0:
-                errors.append((index, 'E01'))
-            if previous_symbol in operators and symbol in operators:
-                errors.append((index, 'E02'))
-            index += 1
-            previous_symbol = symbol
-        if self.string[-1] in operators:
-            errors.append((index, 'E03'))
 
     def get_monomials(self, polinom):
         monomials = []
@@ -324,8 +290,7 @@ class Polynomial():
                     multiplier = 1
                 elif multiplier == '-':
                     multiplier = -1
-                else:
-                    multiplier = float(multiplier)
+                multiplier = Decimal(str(multiplier))
                 while i < len(pol)-1 and \
                         pol[i].lstrip('1234567890+-.') == \
                         pol[i+1].lstrip('1234567890+-.'):
@@ -338,9 +303,7 @@ class Polynomial():
                         k2 = 1
                     elif k2 == '-':
                         k2 = -1
-                    else:
-                        k2 = float(k2)
-                    multiplier += k2
+                    multiplier += Decimal(str(k2))
                     i += 1
                 if multiplier == 0:
                     simple_pol = '0.0'
@@ -487,7 +450,7 @@ class Polynomial():
 
     def isdigit(self, string):
         start = 1
-        if type(string) is int or type(string) is float:
+        if isinstance(string, (int, float)):
             return True
         if string[0] == "-":
             if len(string) == 1:
