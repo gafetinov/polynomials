@@ -124,29 +124,26 @@ class TestPolynomial():
         pol21.simplify()
         assert pol21.string == 'b^2.0+a^2.0-2.0ab'
 
+    def test_simplify11(self):
+        pol1 = Polynomial('2(1+1)')
+        pol1.simplify()
+        pol2 = Polynomial('4')
+        pol2.simplify()
+        assert pol1.string == '4.0'
+        assert pol2.string == '4.0'
+
+    def test_simplify12(self):
+        pol1 = Polynomial('2^2^3')
+        pol1.simplify()
+        assert pol1.string == '256.0'
+        pol2 = Polynomial('2^(2^3)')
+        pol2.simplify()
+        assert pol2.string == '256.0'
+
     def test_get_monomial(self):
         pol = Polynomial('3k+4h+8k+4')
         monomials = pol.get_monomials(pol.string)
         assert monomials == ['3k', '+4h', '+8k', '+4']
-
-    def test_same_polynomial(self):
-        monomials = ['abcdg', '13A^1212b', '23', '4a',
-                     'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa',
-                     'bbbbb'
-                     'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa',
-                     'vnsdkvndskl']
-        permutations = itertools.permutations(monomials)
-        for perm in permutations:
-            string = '+'.join(perm)
-            polinom = Polynomial(string)
-            polinom.simplify()
-            assert polinom.string == '13.0A^1212.0b+' \
-                                     'a^49.0b^5.0+' \
-                                     'a^49.0+' \
-                                     'd^2.0k^2.0ln^2.0s^2.0v^2.0+' \
-                                     'abcdg+' \
-                                     '4.0a+' \
-                                     '23.0'
 
     def test_comparison(self):
         assert self.pol_eq('1+x', 'x+2-1') is True
@@ -154,6 +151,8 @@ class TestPolynomial():
         assert self.pol_eq('(x-y)(x+y)', 'xx-y^2') is False
         assert self.pol_eq('3.1+3.2', '6.3') is True
         assert self.pol_eq('3.1*3.2', '9.92') is True
+        assert self.pol_eq('2(1+1)', '4')
+        assert self.pol_eq('2^2^3', '2^(2^3)')
 
     def pol_eq(self, s1, s2):
         pol1 = Polynomial(s1)

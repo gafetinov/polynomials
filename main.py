@@ -20,10 +20,12 @@ def main():
             print(error)
         exit(1)
     for string in arguments.string:
-        polynomials.append(Polynomial(string))
+        polynomials.append(Polynomial(string.replace(" ", "")))
         polynomials[-1].simplify()
         count += 1
     print(polynomials[0].string == polynomials[1].string)
+    if polynomials[0].string != polynomials[1].string:
+        exit(2)
 
 
 def check_for_errors(string, number):
@@ -37,6 +39,8 @@ def check_for_errors(string, number):
     previous_symbol = ''
     for symbol in string:
         index += 1
+        if symbol == ' ':
+            continue
         if symbol == '.':
             dot_number += 1
         elif not symbol.isdigit():
@@ -60,7 +64,7 @@ def check_for_errors(string, number):
         if previous_symbol in operators and symbol in operators:
             errors.append(((number, index), 'Problem with operator'))
         if ((previous_symbol.isalpha()
-                or (previous_symbol.isdigit() and symbol != '.'))
+             or (previous_symbol.isdigit() and symbol != '.'))
                 and not symbol.isalpha() and not symbol.isdigit()
                 and symbol not in operators
                 and symbol != ')' and symbol != '('):
@@ -79,6 +83,9 @@ def check_for_errors(string, number):
         errors.append(((number, last_close_bracket), 'Problem with brackets'))
     elif brackets > 0:
         errors.append(((number, last_open_bracket), 'Problem with brackets'))
+    if not string[-1].isalpha() and not string[-1].isdigit() and \
+            string[-1] != ')':
+        errors.append(((number, len(string)), 'Extra symbol in the end'))
     return errors
 
 

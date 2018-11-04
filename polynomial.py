@@ -15,7 +15,7 @@ class Polynomial:
             return re.match(r'-?\d*\.?\d*', symbols).group(0) == symbols
 
     def simplify(self):
-        if "(" in self.string:
+        if "(" in self.string or "^" in self.string:
             self.string = self.remove_brackets(self.string)
         monomials = self.get_monomials(self.string)
         simple_monomials = []
@@ -34,6 +34,9 @@ class Polynomial:
                     if monomial[i-1] != '/':
                         multipliers.append(float(multiplier))
                     else:
+                        if float(multiplier) == 0:
+                            raise ZeroDivisionError("You can't divide by "
+                                                    "zero")
                         multipliers.append(1/float(multiplier))
                     i = j - 1
                 elif monomial[i] == '-':
@@ -108,13 +111,16 @@ class Polynomial:
                     out_string.append(symb)
                 sign = "+"
             elif symb == "(":
-                if prev_symb == ")":
+                if prev_symb == ")" or prev_symb.isdigit() or \
+                        prev_symb.isalpha():
                     stack.append("*")
                 stack.append(symb)
             elif symb == ")":
                 while stack[-1] != "(":
                     out_string.append(stack.pop())
                 stack.pop()
+            elif symb == "^":
+                stack.append(symb)
             elif symb in OPERATORSPRIORITY:
                 if symb == "-":
                     if i == 0 or prev_symb == '(':
@@ -150,6 +156,9 @@ class Polynomial:
                     elif el == "*":
                         res = float(arg1 * arg2)
                     elif el == "/":
+                        if arg2 == 0:
+                            raise ZeroDivisionError("You can't divide "
+                                                    "by zero")
                         res = float(arg1 / arg2)
                     elif el == "^":
                         res = float(arg1 ** arg2)
@@ -177,6 +186,9 @@ class Polynomial:
                         res = self.multiply(arg1, arg2)
                     elif el == "/":
                         if self.isdigit(arg2):
+                            if arg2 == 0:
+                                raise ZeroDivisionError("You can't divide "
+                                                        "by zero")
                             arg2 = float(Decimal('1')/Decimal(str(arg2)))
                             res = self.multiply(arg1, arg2)
                         else:
