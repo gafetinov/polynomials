@@ -64,10 +64,10 @@ class TestPolynomial():
         assert pol7.string == '2.0'
         pol8 = Polynomial('3a-2a+2b-b-a')
         pol8.simplify()
-        assert pol8.string == 'b+0.0'
+        assert pol8.string == 'b'
         pol9 = Polynomial('3a-2b-4a+2b')
         pol9.simplify()
-        assert pol9.string == '-a+0.0'
+        assert pol9.string == '-a'
 
     def test_simplyfy4(self):
         pol5 = Polynomial('aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa')
@@ -140,6 +140,35 @@ class TestPolynomial():
         pol2.simplify()
         assert pol2.string == '256.0'
 
+    def test_simplify13(self):
+        pol1 = Polynomial('(x-y)(x+y)')
+        pol1.simplify()
+        pol2 = Polynomial('xx-yy')
+        pol2.simplify()
+        assert pol2.string == '-y^2.0+x^2.0'
+        assert pol1.string == '-y^2.0+x^2.0'
+
+    def test_simplify14(self):
+        pol1 = Polynomial('xx-y^2')
+        pol1.simplify()
+        assert pol1.string == '-y^2.0+x^2.0'
+
+    def test_simplify15(self):
+        pol1 = Polynomial('(x+1)2')
+        pol1.simplify()
+        assert pol1.string == '2.0x+2.0'
+
+    def test_simplify16(self):
+        pol = Polynomial('x+1(+1)')
+        pol.simplify()
+        assert pol.string == 'x+1.0'
+
+    def test_round(self):
+        pol1 = Polynomial('1.999x')
+        pol1.simplify()
+        pol1.round_off(2)
+        assert pol1.string == '2.0x'
+
     def test_get_monomial(self):
         pol = Polynomial('3k+4h+8k+4')
         monomials = pol.get_monomials(pol.string)
@@ -148,11 +177,12 @@ class TestPolynomial():
     def test_comparison(self):
         assert self.pol_eq('1+x', 'x+2-1') is True
         assert self.pol_eq('(a-b)(a-b)', '(a-b)^2') is True
-        assert self.pol_eq('(x-y)(x+y)', 'xx-y^2') is False
+        assert self.pol_eq('(x-y)(x+y)', 'xx-y^2') is True
         assert self.pol_eq('3.1+3.2', '6.3') is True
         assert self.pol_eq('3.1*3.2', '9.92') is True
         assert self.pol_eq('2(1+1)', '4')
         assert self.pol_eq('2^2^3', '2^(2^3)')
+        assert self.pol_eq('(x-1)2', 'x2-2') is True
 
     def pol_eq(self, s1, s2):
         pol1 = Polynomial(s1)

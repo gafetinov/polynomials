@@ -1,4 +1,5 @@
 import re
+import math
 from decimal import Decimal
 
 
@@ -6,13 +7,23 @@ OPERATORSPRIORITY = {"*": 2, "/": 2, "+": 1, "-": 1, "^": 3}
 
 
 class Polynomial:
-
     def __init__(self, string):
         self.string = string
+        self.monomials = None
 
     def is_number(self, symbols):
         if re.match(r'-?\d*\.?\d*', symbols) is not None:
             return re.match(r'-?\d*\.?\d*', symbols).group(0) == symbols
+
+    def round_off(self, epsilon):
+        new_monomials = []
+        for monomial in self.monomials:
+            search_multiplier = re.match(r'-?\d*.?\d*', monomial)
+            multiplier = monomial[:search_multiplier.end()]
+            multiplier = str(round(float(multiplier), epsilon))
+            variables = monomial[search_multiplier.end():]
+            new_monomials.append(multiplier+variables)
+        self.string = self.glue_monomials(new_monomials)
 
     def simplify(self):
         if "(" in self.string or "^" in self.string:
@@ -35,8 +46,8 @@ class Polynomial:
                         multipliers.append(float(multiplier))
                     else:
                         if float(multiplier) == 0:
-                            raise ZeroDivisionError("You can't divide by "
-                                                    "zero")
+                            raise ZeroDivisionError(
+                                "You can't divide by zero")
                         multipliers.append(1/float(multiplier))
                     i = j - 1
                 elif monomial[i] == '-':
@@ -71,6 +82,7 @@ class Polynomial:
         simple_monomials = self.add_up_such_terms(simple_monomials)
         simple_monomials = self.add_up_such_terms(simple_monomials)
         simple_monomials.sort(key=self.sort_by_monomial, reverse=True)
+        self.monomials = simple_monomials
         self.string = self.glue_monomials(simple_monomials)
 
     def remove_brackets(self, expr):
@@ -84,11 +96,20 @@ class Polynomial:
         sign = "+"
         for i in range(len(expression)):
             symb = expression[i]
+            if symb == '+' and (prev_symb == "" or prev_symb == '('):
+                continue
             if symb.isdigit():
                 if prev_symb.isdigit() or prev_symb == ".":
                     out_string[-1] += symb
                     prev_symb = symb
                     continue
+                if prev_symb.isalpha() or prev_symb == ')':
+                    while len(stack) != 0 and \
+                            stack[-1] in OPERATORSPRIORITY and \
+                            OPERATORSPRIORITY["*"] <= OPERATORSPRIORITY[
+                            stack[-1]]:
+                        out_string.append(stack.pop())
+                    stack.append("*")
                 if sign == "-":
                     out_string.append("-" + symb)
                 else:
@@ -98,7 +119,8 @@ class Polynomial:
                 if prev_symb.isdigit():
                     out_string[-1] += symb
             elif symb.isalpha():
-                if prev_symb.isalpha() or prev_symb.isdigit():
+                if prev_symb.isalpha() or prev_symb.isdigit() or \
+                        prev_symb == ')':
                     while len(stack) != 0 and \
                             stack[-1] in OPERATORSPRIORITY and \
                             OPERATORSPRIORITY["*"] <= OPERATORSPRIORITY[
@@ -216,7 +238,11 @@ class Polynomial:
     def glue_monomials(self, monomials):
         result = monomials[0]
         for i in range(1, len(monomials)):
+            if monomials[i] == '0.0':
+                continue
             if monomials[i][0] != "-":
+                if monomials[i][1:] == '0.0':
+                    continue
                 result += "+"
             result += monomials[i]
         return result
