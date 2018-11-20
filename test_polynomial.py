@@ -1,6 +1,4 @@
 from polynomial import Polynomial
-import random
-import itertools
 
 D = ['x', 'x', 's', 's', 'f']
 A = Polynomial('example')
@@ -162,6 +160,21 @@ class TestPolynomial():
         pol = Polynomial('x+1(+1)')
         pol.simplify()
         assert pol.string == 'x+1.0'
+
+    def test_simplify17(self):
+        pol = Polynomial('1/(1/2)')
+        pol.simplify()
+        assert pol.string == '2.0'
+
+    def test_simplify18(self):
+        pol = Polynomial('x^(y-y)')
+        pol.simplify()
+        assert pol.string == '1.0'
+
+    def test_simplify19(self):
+        pol = Polynomial('x^(2*1.5)')
+        pol.simplify()
+        assert pol.string == 'x^3.0'
 
     def test_round(self):
         pol1 = Polynomial('1.999x')

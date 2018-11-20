@@ -18,11 +18,23 @@ class Polynomial:
     def round_off(self, epsilon):
         new_monomials = []
         for monomial in self.monomials:
-            search_multiplier = re.match(r'-?\d*.?\d*', monomial)
+            search_multiplier = re.match(r'-?\d+\.?\d*', monomial)
+            if not search_multiplier:
+                new_monomials.append(monomial)
+                continue
             multiplier = monomial[:search_multiplier.end()]
             multiplier = str(round(float(multiplier), epsilon))
             variables = monomial[search_multiplier.end():]
-            new_monomials.append(multiplier+variables)
+            if float(multiplier) == 1:
+                if variables:
+                    multiplier = ''
+                else:
+                    multiplier = 1.0
+            elif float(multiplier) == -1 and variables:
+                multiplier = '-'
+            elif float(multiplier) == 0:
+                variables = ''
+            new_monomials.append(str(multiplier)+variables)
         self.string = self.glue_monomials(new_monomials)
 
     def simplify(self):
@@ -77,6 +89,9 @@ class Polynomial:
                 common_multiplier = '-'
             elif common_multiplier == 0:
                 variables.clear()
+            else:
+                common_multiplier = format(Decimal(str(common_multiplier)),
+                                           'f')
             simple_monomials.append(str(common_multiplier)+''.join(variables))
         simple_monomials.sort(key=self.sort_by_monomial, reverse=True)
         simple_monomials = self.add_up_such_terms(simple_monomials)
@@ -209,16 +224,23 @@ class Polynomial:
                     elif el == "/":
                         if self.isdigit(arg2):
                             if arg2 == 0:
-                                raise ZeroDivisionError("You can't divide "
-                                                        "by zero")
+                                raise ZeroDivisionError(
+                                    "You can't divide by zero")
                             arg2 = float(Decimal('1')/Decimal(str(arg2)))
                             res = self.multiply(arg1, arg2)
                         else:
-                            raise ArithmeticError("You can divide "
-                                                  "only by number")
+                            new_pol = Polynomial(arg2)
+                            new_pol.simplify()
+                            try:
+                                arg2 = float(
+                                    Decimal('1') / Decimal(new_pol.string))
+                                res = self.multiply(arg1, arg2)
+                            except ArithmeticError:
+                                raise ArithmeticError(
+                                    "You can divide only by number")
                     elif el == "^":
-                        if arg2.isdigit():
-                            arg2 = int(arg2)
+                        if arg2.isdigit() or self.isdigit(arg2):
+                            arg2 = float(arg2)
                             if arg2 == 0:
                                 res = "1"
                             else:
@@ -227,10 +249,23 @@ class Polynomial:
                                     res = self.multiply(res, arg1)
                                     arg2 -= 1
                         else:
-                            raise ArithmeticError("The expression with "
-                                                  "variables can be built "
-                                                  "only in the natural "
-                                                  "degree")
+                            try:
+                                new_pol = Polynomial(arg2)
+                                new_pol.simplify()
+                                arg2 = float(new_pol.string)
+                                if arg2 == 0:
+                                    res = "1"
+                                else:
+                                    res = arg1
+                                    while arg2 > 1:
+                                        res = self.multiply(res, arg1)
+                                        arg2 -= 1
+                            except ArithmeticError:
+                                raise ArithmeticError("The expression with "
+                                                      "variables can "
+                                                      "be built "
+                                                      "only in the natural "
+                                                      "degree")
                 stack.pop()
                 stack[-1] = str(res)
         return stack[0]
@@ -460,6 +495,7 @@ class Polynomial:
         return res
 
     def multiply_bracket_by_number(self, bracket, number):
+        bracket = str(bracket)
         if bracket[0] != "-":
             bracket = str(number) + "*" + bracket
         if float(number) >= 0:

@@ -7,9 +7,9 @@ from polynomial import Polynomial
 def main():
     parser = argparse.ArgumentParser(
         description='This program compares two polynomials')
-    parser.add_argument('string', nargs=2,
+    parser.add_argument('string', nargs=2, type=str,
                         help='Enter polynomials to compare them')
-    parser.add_argument('--epsilon', nargs=1,
+    parser.add_argument('--epsilon', nargs=1, type=int,
                         help='Enter number of decimal places')
     arguments = parser.parse_args()
     polynomials = []
@@ -67,11 +67,17 @@ def check_for_errors(string, number):
         elif symbol == ')':
             brackets -= 1
             last_close_bracket = index
-        if previous_symbol == '^' and not symbol.isdigit() and symbol != '(':
-            errors.append(((number, index), 'should be built to a '
-                                            'numerical power'))
-        if previous_symbol == '/' and not symbol.isdigit() and symbol != '(':
-            errors.append(((number, index), 'You can divide only by number'))
+            if previous_symbol in operators:
+                errors.append(((number, index-1),
+                               'Extra symbol "{}"'.format(previous_symbol)))
+        if previous_symbol == '^' and not symbol.isdigit() and \
+                not check_divide_number(string, index-1):
+            errors.append(((number, index),
+                           'should be built to a numerical power'))
+        if previous_symbol == '/' and not symbol.isdigit() and \
+                not check_divide_number(string, index-1):
+            errors.append(((number, index-1),
+                           'You can divide only by number'))
         if dot_number > 1:
             errors.append(((number, index), 'In number can be only one dot'))
             dot_number = 0
@@ -105,12 +111,37 @@ def check_for_errors(string, number):
     return errors
 
 
+def check_divide_number(string, index):
+    match = re.match(r'\(*.*\)', string[index:])
+    if match:
+        expr = del_extra_bracket(match.group(0))
+        if check_for_errors(expr, 0):
+            return False
+        pol = Polynomial(expr)
+        pol.simplify()
+        if re.fullmatch(r'\d+\.?\d*', pol.string):
+            return True
+    return False
+
+
+def del_extra_bracket(expr):
+    brackets = 0
+    for i in range(len(expr)):
+        if (expr[i] == '('):
+            brackets += 1
+        elif expr[i] == ')':
+            brackets -= 1
+    if brackets < 0:
+        return expr[:brackets]
+    return expr
+
+
 def check_divide_zero(string, index):
-    match = re.match(r'\d*.?\d*', string[index:])
-    if match.group(0) == '0*' or \
+    match = re.match(r'\d*\.?\d*', string[index:])
+    if match.group(0) == '0' or \
             (match.group(0)[:3] == 0.0 and match.group(0)[-1] == 0):
         return True
-    match = re.match(r'\([\s\S]*\)', string[index:])
+    match = re.match(r'\(.*\)', string[index:])
     if match:
         try:
             pol = Polynomial(match.group(0))
